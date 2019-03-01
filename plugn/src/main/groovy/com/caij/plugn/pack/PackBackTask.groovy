@@ -83,7 +83,7 @@ class PackBackTask extends DefaultTask {
             copyFileUsingStream(resMappingFile, resMappingFileBack)
 
             if (buildType == "release") {
-                String walleCommand = "java" + " -jar" + " " + packExtension.walleJarPath + " batch" + " -f " + packExtension.channelFilePath + " " + resApkFile.getAbsolutePath() + " " + resDir.getAbsolutePath()
+                String walleCommand = String.format(packExtension.walleCommand, resApkFile.getAbsolutePath(), resDir.getAbsolutePath())
                 execCommand(walleCommand)
 
                 File mappingFile = new File("${project.buildDir}/outputs/mapping/" + flavorName + "/" + buildType + "/mapping.txt")
@@ -101,8 +101,9 @@ class PackBackTask extends DefaultTask {
                 if (packExtension.isApkCanary) {
                     File analyzeFile = new File(backDir, "apk-checker-result");
                     String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
-                    File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt");
+                    File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
                     String resultJson = String.format(apkCanaryJson, resApkFile.getAbsolutePath(), mappingFileBack.getAbsolutePath(), resMappingFileBack.getAbsolutePath(), analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
+
                     println(resultJson)
 
                     File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
