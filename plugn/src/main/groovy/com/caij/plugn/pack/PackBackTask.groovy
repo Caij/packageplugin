@@ -72,7 +72,7 @@ class PackBackTask extends DefaultTask {
             File resDir = new File(outPutDir, "/resguard")
             File backDir = new File(outPutDir, "/backup-" + suf)
 
-            File sourceApkFileBack = new File(backDir, apkBasename)
+            File sourceApkFileBack = new File(backDir, apkBasename + ".apk")
             copyFileUsingStream(config.file, sourceApkFileBack)
 
             File resApkFile = new File(backDir, "resguard-" + apkBasename + ".apk")
