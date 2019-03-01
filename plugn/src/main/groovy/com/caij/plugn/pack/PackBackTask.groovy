@@ -8,11 +8,11 @@ import org.gradle.api.tasks.TaskAction
  *
  * @author Sim Sun (sunsj1231@gmail.com)
  */
-class PackTasj extends DefaultTask {
+class PackBackTask extends DefaultTask {
     def buildConfigs = []
     PackExtension packExtension;
 
-    PackTasj() {
+    PackBackTask() {
         group = 'pack'
         def android = project.extensions.android
         packExtension = project.pack
