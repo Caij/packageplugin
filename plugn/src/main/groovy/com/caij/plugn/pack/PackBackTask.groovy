@@ -141,6 +141,9 @@ class PackBackTask extends DefaultTask {
     private static void saveAsFileWriter(File file, String content) {
         FileWriter fwriter = null;
         try {
+            if (!file.getParentFile().exists()) {
+                file.getParentFile().mkdirs()
+            }
             fwriter = new FileWriter(file);
             fwriter.write(content);
         } catch (IOException ex) {
