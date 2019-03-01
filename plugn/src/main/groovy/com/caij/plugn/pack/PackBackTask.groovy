@@ -106,10 +106,10 @@ class PackBackTask extends DefaultTask {
                     println(resultJson)
 
                     File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
-                    saveAsFileWriter(resultJsonFile, resultJson)
+                    saveAsFileWriter(resultJsonFile, "hahahahah")
                     String apkCanaryCommand = "java " + "-jar " + packExtension.apkCanaryJarPath + " --config " + "CONFIG-FILE_PATH " + resultJsonFile.getAbsolutePath()
 
-                    execCommand(apkCanaryCommand)
+//                    execCommand(apkCanaryCommand)
                 }
             }
         }
