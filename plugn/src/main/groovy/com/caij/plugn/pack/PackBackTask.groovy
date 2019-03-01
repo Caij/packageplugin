@@ -83,7 +83,7 @@ class PackBackTask extends DefaultTask {
             copyFileUsingStream(resMappingFile, resMappingFileBack)
 
             if (buildType == "release") {
-                String walleCommand = "java" + " -jar" + " " + packExtension.apkCanaryJarPath + " batch" + " -f " + packExtension.channelFilePath + " " + resApkFile.getAbsolutePath() + " " + resDir.getAbsolutePath()
+                String walleCommand = "java" + " -jar" + " " + packExtension.walleJarPath + " batch" + " -f " + packExtension.channelFilePath + " " + resApkFile.getAbsolutePath() + " " + resDir.getAbsolutePath()
                 execCommand(walleCommand)
 
                 File mappingFile = new File("${project.buildDir}/outputs/mapping/" + flavorName + "/" + buildType + "/mapping.txt")
