@@ -138,7 +138,7 @@ class PackBackTask extends DefaultTask {
         proc.waitForProcessOutput()
     }
 
-    private static void saveAsFileWriter(File file, String content) {
+    static void saveAsFileWriter(File file, String content) {
         FileWriter fwriter = null;
         try {
             if (!file.getParentFile().exists()) {
@@ -158,7 +158,7 @@ class PackBackTask extends DefaultTask {
         }
     }
 
-    String getFileString(String path) {
+    static String getFileString(String path) {
         try {
             FileInputStream inStream= new FileInputStream(path);
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
