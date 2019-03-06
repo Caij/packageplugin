@@ -4,7 +4,16 @@ public class PackExtension {
 
     public String outFileDir;
 
-    public String walleCommand;
+    public boolean isRedex;
+    public String redexConfigPath;
+
+    public String resGuardJarPath;
+    public String resGuardConfigPath;
+    public String zipPath;
+
+    public boolean isWalle;
+    public String walleJarPath;
+    public String walleChannelPath;
 
     public boolean isApkCanary;
     public String  apkCanaryJarPath;

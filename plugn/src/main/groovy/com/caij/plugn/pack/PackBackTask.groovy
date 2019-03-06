@@ -11,10 +11,11 @@ import org.gradle.api.tasks.TaskAction
 class PackBackTask extends DefaultTask {
     def buildConfigs = []
     PackExtension packExtension;
+    def android
 
     PackBackTask() {
         group = 'pack'
-        def android = project.extensions.android
+        android = project.extensions.android
         packExtension = project.pack
         android.applicationVariants.all { variant ->
             variant.outputs.each { output ->
@@ -50,11 +51,8 @@ class PackBackTask extends DefaultTask {
                 throw new IOException("Original APK not existed")
             }
 
-            String dir = useFolder(config.file)
             String apkBasename = config.file.getName()
             apkBasename = apkBasename.substring(0, apkBasename.indexOf(".apk"));
-            File resFile = new File(dir, apkBasename + "_7zip_aligned_signed.apk")
-            println("res file " + resFile.getAbsolutePath())
 
             println(config.toString())
 
@@ -69,77 +67,115 @@ class PackBackTask extends DefaultTask {
                 outPutPatent = packExtension.outFileDir;
             }
             File outPutDir = new File(outPutPatent, suf)
-            File resDir = new File(outPutDir, "/resguard")
+
             File backDir = new File(outPutDir, "/backup-" + suf)
 
             File sourceApkFileBack = new File(backDir, apkBasename + ".apk")
             copyFileUsingStream(config.file, sourceApkFileBack)
 
-            File resApkFile = new File(backDir, "resguard-" + apkBasename + ".apk")
-            println("out file " + resApkFile.getAbsolutePath())
+            File mappingFile = new File("${project.buildDir}/outputs/mapping/" + flavorName + "/" + buildType + "/mapping.txt")
+            File mappingFileBack = new File(backDir, "mapping.txt")
+            if (mappingFile.exists()) {
+                copyFileUsingStream(mappingFile, mappingFileBack)
+            }
 
-            copyFileUsingStream(resFile, resApkFile)
 
-            String resMappingFileName = "resource_mapping_" + apkBasename + ".txt"
-            File resMappingFile = new File(dir, resMappingFileName)
+            File resultFile;
+
+            //redex
+            if (packExtension.isRedex) {
+                File redexFile = new File(backDir, apkBasename + "-redex.apk");
+                execCommand("redex", sourceApkFileBack.getAbsolutePath(), "-c", packExtension.redexConfigPath, "-m", mappingFile.getAbsolutePath(), "-o", redexFile.getAbsolutePath())
+                resultFile = redexFile;
+            } else {
+                resultFile = sourceApkFileBack;
+            }
+
+            String apkName = resultFile.getName();
+            apkName = apkName.substring(0, apkName.indexOf(".apk"));
+
+            //resource guard
+            File resDir = new File(outPutDir, "/resguard");
+//                java -jar andresguard.jar input.apk -config yourconfig.xml -out output_directory
+            execCommand("java", "-jar", packExtension.resGuardJarPath, resultFile.getAbsolutePath(), "-config", packExtension.resGuardConfigPath, "-7zip", packExtension.zipPath, "-zipalign", getZipAlignPath(), "-signatureType", "v2", "-out", resDir.getAbsolutePath())
+            File resguardApkFile = new File(resDir, apkName + "_7zip_aligned_signed.apk")
+
+            //sign
+//            File signResGuardApk = new File(backDir, "resguard-" + apkBasename + "7zip_aligned_sign.apk")
+//            def signConfig = config.signConfig
+//            File signFile = signConfig.storeFile;
+//            execCommand("java", "-jar", "sign", "--ks", signFile.getAbsolutePath(), " --ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", signConfig.keyPassword, "--out", signResGuardApk.getAbsolutePath(), resguardApkFile.getAbsolutePath())
+            resultFile = resguardApkFile;
+
+            String resMappingFileName = "resource_mapping_" + apkName + ".txt"
+            File resMappingFile = new File(resDir, resMappingFileName)
             File resMappingFileBack = new File(backDir, resMappingFileName)
             copyFileUsingStream(resMappingFile, resMappingFileBack)
 
-            if (buildType == "release") {
-                String walleCommand = String.format(packExtension.walleCommand, resApkFile.getAbsolutePath(), resDir.getAbsolutePath())
-                execCommand(walleCommand)
+            //walle
 
-                File mappingFile = new File("${project.buildDir}/outputs/mapping/" + flavorName + "/" + buildType + "/mapping.txt")
-                File mappingFileBack = new File(backDir, "mapping.txt")
-                if (mappingFile.exists()) {
-                    copyFileUsingStream(mappingFile, mappingFileBack)
-                }
+            if (packExtension.isWalle) {
+                execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), resDir.getAbsolutePath())
+            }
 
-                String updateLogFile = "${project.projectDir}/update.txt"
-                File updateFileBack = new File(backDir, "update.txt")
-                if (new File(updateLogFile).exists()) {
-                    copyFileUsingStream(new File(updateLogFile), updateFileBack)
-                }
+            if (packExtension.isApkCanary) {
+                File analyzeFile = new File(backDir, "apk-checker-result");
+                String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
+                File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
+                //只对source apk分析 因为后续的apk dex优化了 可能分析不准
+                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFileBack.getAbsolutePath(), resMappingFileBack.getAbsolutePath(), analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
 
-                if (packExtension.isApkCanary) {
-                    File analyzeFile = new File(backDir, "apk-checker-result");
-                    String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
-                    File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
-                    String resultJson = String.format(apkCanaryJson, resApkFile.getAbsolutePath(), mappingFileBack.getAbsolutePath(), resMappingFileBack.getAbsolutePath(), analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
+                println(resultJson)
 
-                    println(resultJson)
+                File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
+                saveAsFileWriter(resultJsonFile, resultJson)
 
-                    File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
-                    saveAsFileWriter(resultJsonFile, resultJson)
-                    String apkCanaryCommand = "java " + "-jar " + packExtension.apkCanaryJarPath + " --config " + "CONFIG-FILE_PATH " + resultJsonFile.getAbsolutePath()
-
-                    execCommand(apkCanaryCommand)
-                }
+                execCommand("java", "-jar", packExtension.apkCanaryJarPath, "--config", "CONFIG-FILE_PATH", resultJsonFile.getAbsolutePath())
             }
         }
     }
+    def getZipAlignPath() {
+        return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/zipalign"
+    }
 
-    static void execCommand(String command) {
-        println(command)
-        Process proc = command.execute();
-        BufferedReader stdInput = new BufferedReader(new
-                InputStreamReader(proc.getInputStream()));
+    static void execCommand(String... command) {
+        Process proc;
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            for(String s1 :command){
+                stringBuilder.append(s1).append(" ");
+            }
+            println(stringBuilder.toString())
+            proc = new ProcessBuilder(command).start();
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(proc.getInputStream()));
 
-        BufferedReader stdError = new BufferedReader(new
-                InputStreamReader(proc.getErrorStream()));
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(proc.getErrorStream()));
 
-        //这里必须加输出日志 否则apk canary不成功  咱不知道什么问题 考虑是gradle完成 进程被杀 所以导致不成功
-        println("Here is the standard output of the command:\n");
-        String s = null;
-        while ((s = stdInput.readLine()) != null) {
-            println(s);
+            //这里必须加输出日志 否则apk canary不成功  咱不知道什么问题 考虑是gradle完成 进程被杀 所以导致不成功
+            println("Here is the standard output of the command:\n");
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                println(s);
+            }
+
+            println("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                System.err.println(s);
+            }
+
+            proc.waitFor();
+            if (proc.exitValue() != 0) {
+                System.err.println(String.format("%s Failed! Please check your signature file.\n", command[0]));
+                throw new RuntimeException("jar 执行失败");
+            }
+        } finally {
+            if (proc != null) {
+                proc.destroy();
+            }
         }
 
-        println("Here is the standard error of the command (if any):\n");
-        while ((s = stdError.readLine()) != null) {
-            println(s);
-        }
-        proc.waitForProcessOutput()
     }
 
     static void saveAsFileWriter(File file, String content) {

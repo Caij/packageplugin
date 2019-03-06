@@ -43,7 +43,7 @@ class PackPlugin implements Plugin<Project> {
         def taskName = "pack${variantName}"
         if (project.tasks.findByPath(taskName) == null) {
             def task = project.task(taskName, type: PackBackTask)
-            task.dependsOn "resguard${variantName}"
+            task.dependsOn "assemble${variantName}"
         }
     }
 
