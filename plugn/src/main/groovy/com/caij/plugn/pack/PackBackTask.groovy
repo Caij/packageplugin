@@ -85,7 +85,50 @@ class PackBackTask extends DefaultTask {
             //redex
             if (packExtension.isRedex) {
                 File redexFile = new File(backDir, apkBasename + "-redex.apk");
-                execCommand("redex", sourceApkFileBack.getAbsolutePath(), "-c", packExtension.redexConfigPath, "-m", mappingFile.getAbsolutePath(), "-o", redexFile.getAbsolutePath())
+                File coolStartFileBuild = new File(project.buildDir, "redex/class_list.txt");
+                File jsonCinfigFileBuild = new File(project.buildDir, "redex/default.config");
+                // release 将混淆mapping对应起来
+
+                Map<String, String> mappingMap = readMappingFile(mappingFileBack);
+
+                File coolStartClassFile = new File(packExtension.redexCoolStartath);
+
+                println(coolStartClassFile.getAbsolutePath());
+
+                if (!coolStartFileBuild.getParentFile().exists()) {
+                    coolStartFileBuild.getParentFile().mkdirs();
+                }
+                FileWriter fw = new FileWriter(coolStartFileBuild);
+
+                coolStartClassFile.eachLine {
+                    String line = it;
+
+                    String className = line.replace(".class", "");
+                    className = className.replace("/", ".");
+                    String reguardClassName = mappingMap.get(className);
+                    String result;
+                    if (reguardClassName == null) {
+                        result = className;
+                    } else {
+                        result = reguardClassName;
+                    }
+
+                    result = result.replace(".", "/");
+
+                    fw.write(result+ ".class" + "\n");
+                }
+
+                fw.close();
+
+                String redexConfigJson = getFileString(packExtension.redexConfigPath);
+                String resultJson = String.format(redexConfigJson, coolStartFileBuild.getAbsolutePath());
+
+                println(resultJson)
+
+                saveAsFileWriter(jsonCinfigFileBuild, resultJson)
+
+
+                execCommand("redex", sourceApkFileBack.getAbsolutePath(), "-c", jsonCinfigFileBuild.getAbsolutePath(), "-m", mappingFile.getAbsolutePath(), "-o", redexFile.getAbsolutePath())
                 resultFile = redexFile;
             } else {
                 resultFile = sourceApkFileBack;
@@ -136,6 +179,35 @@ class PackBackTask extends DefaultTask {
     }
     def getZipAlignPath() {
         return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/zipalign"
+    }
+
+    static Map<String, String> readMappingFile(File file) {
+        Map<String, String> map = new HashMap<>();
+        FileReader fr;
+        BufferedReader br;
+        try {
+            fr = new FileReader(file);
+            br = new BufferedReader(fr);
+            String line = "";
+
+            while ((line = br.readLine())!=null) {
+                if (line != null && line.endsWith(":")) {
+                    line = line.replace(":", "")
+                    String[] values = line.split(" -> ");
+                    map.put(values[0], values[1]);
+                }
+            }
+        } finally {
+            if (br != null) {
+                br.close();
+            }
+
+            if (fr != null) {
+                fr.close();
+            }
+        }
+
+        return map;
     }
 
     static void execCommand(String... command) {

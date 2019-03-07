@@ -6,6 +6,7 @@ public class PackExtension {
 
     public boolean isRedex;
     public String redexConfigPath;
+    public String redexCoolStartath;
 
     public String resGuardJarPath;
     public String resGuardConfigPath;
