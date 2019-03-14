@@ -1,1 +1,1 @@
-# 一键打包插件 就是结合andresguard和walle
+# 一键打包插件 结合andresguard、walle、redex
