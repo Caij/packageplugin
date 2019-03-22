@@ -8,6 +8,7 @@ public class PackExtension {
     public String redexConfigPath;
     public String redexCoolStartath;
 
+    public boolean isResGuard;
     public String resGuardJarPath;
     public String resGuardConfigPath;
     public String zipPath;

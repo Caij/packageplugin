@@ -129,7 +129,14 @@ class PackBackTask extends DefaultTask {
 
 
                 execCommand("redex", sourceApkFileBack.getAbsolutePath(), "-c", jsonCinfigFileBuild.getAbsolutePath(), "-m", mappingFile.getAbsolutePath(), "-o", redexFile.getAbsolutePath())
-                resultFile = redexFile;
+
+                //sign redex
+                File signApk = new File(backDir, apkBasename + "-redex-signed.apk")
+                def signConfig = config.signConfig
+                File signFile = signConfig.storeFile;
+                execCommand("java", "-jar", "sign", "--ks", signFile.getAbsolutePath(), " --ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", signConfig.keyPassword, "--out", signApk.getAbsolutePath(), redexFile.getAbsolutePath())
+
+                resultFile = signApk;
             } else {
                 resultFile = sourceApkFileBack;
             }
@@ -138,25 +145,22 @@ class PackBackTask extends DefaultTask {
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
 
             //resource guard
-            File resDir = new File(outPutDir, "/resguard");
+            if (packExtension.isResGuard) {
+                File resDir = new File(outPutDir, "/resguard");
 //                java -jar andresguard.jar input.apk -config yourconfig.xml -out output_directory
-            execCommand("java", "-jar", packExtension.resGuardJarPath, resultFile.getAbsolutePath(), "-config", packExtension.resGuardConfigPath, "-7zip", packExtension.zipPath, "-zipalign", getZipAlignPath(), "-signatureType", "v2", "-out", resDir.getAbsolutePath())
-            File resguardApkFile = new File(resDir, apkName + "_7zip_aligned_signed.apk")
+                execCommand("java", "-jar", packExtension.resGuardJarPath, resultFile.getAbsolutePath(), "-config", packExtension.resGuardConfigPath, "-7zip", packExtension.zipPath, "-zipalign", getZipAlignPath(), "-signatureType", "v2", "-out", resDir.getAbsolutePath())
+                File resguardApkFile = new File(resDir, apkName + "_7zip_aligned_signed.apk")
 
-            //sign
-//            File signResGuardApk = new File(backDir, "resguard-" + apkBasename + "7zip_aligned_sign.apk")
-//            def signConfig = config.signConfig
-//            File signFile = signConfig.storeFile;
-//            execCommand("java", "-jar", "sign", "--ks", signFile.getAbsolutePath(), " --ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", signConfig.keyPassword, "--out", signResGuardApk.getAbsolutePath(), resguardApkFile.getAbsolutePath())
-            resultFile = resguardApkFile;
+                String resMappingFileName = "resource_mapping_" + apkName + ".txt"
+                File resMappingFile = new File(resDir, resMappingFileName)
+                File resMappingFileBack = new File(backDir, resMappingFileName)
+                copyFileUsingStream(resMappingFile, resMappingFileBack)
 
-            String resMappingFileName = "resource_mapping_" + apkName + ".txt"
-            File resMappingFile = new File(resDir, resMappingFileName)
-            File resMappingFileBack = new File(backDir, resMappingFileName)
-            copyFileUsingStream(resMappingFile, resMappingFileBack)
+                resultFile = resguardApkFile;
+            }
+
 
             //walle
-
             if (packExtension.isWalle) {
                 execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), resDir.getAbsolutePath())
             }
