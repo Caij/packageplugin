@@ -248,7 +248,6 @@ class PackBackTask extends DefaultTask {
 
             proc.waitFor();
             if (proc.exitValue() != 0) {
-                System.err.println(String.format("%s Failed! Please check your signature file.\n", command[0]));
                 throw new RuntimeException("jar 执行失败");
             }
         } finally {
@@ -257,6 +256,7 @@ class PackBackTask extends DefaultTask {
             }
         }
 
+        println("jar 执行完成");
     }
 
     static void saveAsFileWriter(File file, String content) {
