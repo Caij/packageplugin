@@ -134,7 +134,7 @@ class PackBackTask extends DefaultTask {
                 File signApk = new File(backDir, apkBasename + "-redex-signed.apk")
                 def signConfig = config.signConfig
                 File signFile = signConfig.storeFile;
-                execCommand("java", "-jar", "sign", "--ks", signFile.getAbsolutePath(), " --ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", signConfig.keyPassword, "--out", signApk.getAbsolutePath(), redexFile.getAbsolutePath())
+                execCommand("java", "-jar", getSignPath(), "sign", "--ks", signFile.getAbsolutePath(), " --ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", "pass:" + signConfig.keyPassword, "--out", signApk.getAbsolutePath(), redexFile.getAbsolutePath())
 
                 resultFile = signApk;
             } else {
@@ -181,8 +181,13 @@ class PackBackTask extends DefaultTask {
             }
         }
     }
+
     def getZipAlignPath() {
         return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/zipalign"
+    }
+
+    def getSignPath() {
+        return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/lib/apksigner.jar"
     }
 
     static Map<String, String> readMappingFile(File file) {
