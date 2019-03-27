@@ -162,7 +162,7 @@ class PackBackTask extends DefaultTask {
 
             //walle
             if (packExtension.isWalle) {
-                execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), resDir.getAbsolutePath())
+                execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath())
             }
 
             if (packExtension.isApkCanary) {
