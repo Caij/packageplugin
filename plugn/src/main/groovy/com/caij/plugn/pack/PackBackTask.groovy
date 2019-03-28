@@ -138,7 +138,7 @@ class PackBackTask extends DefaultTask {
 
                 resultFile = signApk;
 
-                redexFile.deleteOnExit()
+                redexFile.delete()
             } else {
                 resultFile = sourceApkFileBack;
             }
@@ -147,6 +147,7 @@ class PackBackTask extends DefaultTask {
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
 
             //resource guard
+            String resMappingFileName = "resource_mapping_" + apkName + ".txt"
             File resMappingFileBack = new File(backDir, resMappingFileName)
             if (packExtension.isResGuard) {
                 File resDir = new File(outPutDir, "/resguard");
@@ -154,7 +155,6 @@ class PackBackTask extends DefaultTask {
                 execCommand("java", "-jar", packExtension.resGuardJarPath, resultFile.getAbsolutePath(), "-config", packExtension.resGuardConfigPath, "-7zip", packExtension.zipPath, "-zipalign", getZipAlignPath(), "-signatureType", "v2", "-out", resDir.getAbsolutePath())
                 File resguardApkFile = new File(resDir, apkName + "_7zip_aligned_signed.apk")
 
-                String resMappingFileName = "resource_mapping_" + apkName + ".txt"
                 File resMappingFile = new File(resDir, resMappingFileName)
 
                 copyFileUsingStream(resMappingFile, resMappingFileBack)
