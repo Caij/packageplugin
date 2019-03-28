@@ -145,6 +145,7 @@ class PackBackTask extends DefaultTask {
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
 
             //resource guard
+            File resMappingFileBack = new File(backDir, resMappingFileName)
             if (packExtension.isResGuard) {
                 File resDir = new File(outPutDir, "/resguard");
 //                java -jar andresguard.jar input.apk -config yourconfig.xml -out output_directory
@@ -153,7 +154,7 @@ class PackBackTask extends DefaultTask {
 
                 String resMappingFileName = "resource_mapping_" + apkName + ".txt"
                 File resMappingFile = new File(resDir, resMappingFileName)
-                File resMappingFileBack = new File(backDir, resMappingFileName)
+
                 copyFileUsingStream(resMappingFile, resMappingFileBack)
 
                 resultFile = resguardApkFile;
