@@ -137,6 +137,8 @@ class PackBackTask extends DefaultTask {
                 execCommand("java", "-jar", getSignPath(), "sign", "--ks", signFile.getAbsolutePath(), "--ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", "pass:" + signConfig.keyPassword, "--out", signApk.getAbsolutePath(), redexFile.getAbsolutePath())
 
                 resultFile = signApk;
+
+                redexFile.deleteOnExit()
             } else {
                 resultFile = sourceApkFileBack;
             }
