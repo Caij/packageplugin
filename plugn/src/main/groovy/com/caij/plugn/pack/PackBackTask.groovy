@@ -79,69 +79,7 @@ class PackBackTask extends DefaultTask {
                 copyFileUsingStream(mappingFile, mappingFileBack)
             }
 
-
-            File resultFile;
-
-            //redex
-            if (packExtension.isRedex) {
-                File redexFile = new File(backDir, apkBasename + "-redex.apk");
-                File coolStartFileBuild = new File(project.buildDir, "redex/class_list.txt");
-                File jsonCinfigFileBuild = new File(project.buildDir, "redex/default.config");
-                // release 将混淆mapping对应起来
-
-                Map<String, String> mappingMap = readMappingFile(mappingFileBack);
-
-                File coolStartClassFile = new File(packExtension.redexCoolStartath);
-
-                println(coolStartClassFile.getAbsolutePath());
-
-                if (!coolStartFileBuild.getParentFile().exists()) {
-                    coolStartFileBuild.getParentFile().mkdirs();
-                }
-                FileWriter fw = new FileWriter(coolStartFileBuild);
-
-                coolStartClassFile.eachLine {
-                    String line = it;
-
-                    String className = line.replace(".class", "");
-                    className = className.replace("/", ".");
-                    String reguardClassName = mappingMap.get(className);
-                    String result;
-                    if (reguardClassName == null) {
-                        result = className;
-                    } else {
-                        result = reguardClassName;
-                    }
-
-                    result = result.replace(".", "/");
-
-                    fw.write(result+ ".class" + "\n");
-                }
-
-                fw.close();
-
-                String redexConfigJson = getFileString(packExtension.redexConfigPath);
-                String resultJson = String.format(redexConfigJson, coolStartFileBuild.getAbsolutePath());
-
-                println(resultJson)
-
-                saveAsFileWriter(jsonCinfigFileBuild, resultJson)
-
-
-                execCommand("redex", sourceApkFileBack.getAbsolutePath(), "-c", jsonCinfigFileBuild.getAbsolutePath(), "-m", mappingFile.getAbsolutePath(), "-o", redexFile.getAbsolutePath())
-
-                //sign redex
-                File signApk = new File(backDir, apkBasename + "-redex-signed.apk")
-                def signConfig = config.signConfig
-                File signFile = signConfig.storeFile;
-                execCommand("java", "-jar", getSignPath(), "sign", "--ks", signFile.getAbsolutePath(), "--ks-key-alias", signConfig.keyAlias, "--ks-pass", "pass:" + signConfig.storePassword, "--key-pass", "pass:" + signConfig.keyPassword, "--out", signApk.getAbsolutePath(), redexFile.getAbsolutePath())
-
-                resultFile = signApk;
-
-                redexFile.delete()
-            } else {
-                resultFile = sourceApkFileBack;
-            }
+            File resultFile = sourceApkFileBack;
 
             String apkName = resultFile.getName();
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
@@ -159,7 +97,11 @@ class PackBackTask extends DefaultTask {
 
                 copyFileUsingStream(resMappingFile, resMappingFileBack)
 
-                resultFile = resguardApkFile;
+
+                resultFile = new File(backDir, resguardApkFile.getName())
+                copyFileUsingStream(resguardApkFile, resultFile)
+
+                resDir.deleteDir()
             }
 
 

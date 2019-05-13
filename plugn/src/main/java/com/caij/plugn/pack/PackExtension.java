@@ -4,10 +4,6 @@ public class PackExtension {
 
     public String outFileDir;
 
-    public boolean isRedex;
-    public String redexConfigPath;
-    public String redexCoolStartath;
-
     public boolean isResGuard;
     public String resGuardJarPath;
     public String resGuardConfigPath;
