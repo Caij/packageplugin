@@ -89,6 +89,7 @@ class PackBackTask extends DefaultTask {
             if (packExtension.isResGuard) {
                 String resMappingFileName = "resource_mapping_" + apkName + ".txt"
                 File resMappingFile = new File(config.file.getParentFile(), "/AndResGuard_" + apkName + "/" + resMappingFileName)
+                println("res mapping file " + resMappingFile.exists())
                 resMappingFilePath = resMappingFile.getAbsolutePath();
             }
 
