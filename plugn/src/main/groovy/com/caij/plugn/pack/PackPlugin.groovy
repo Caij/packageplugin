@@ -14,7 +14,7 @@ class PackPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         project.extensions.create("pack", PackExtension)
-
+        PackExtension packExtension = project.pack
         if (!project.plugins.hasPlugin('com.android.application')) {
             throw new GradleException('Systrace Plugin, Android Application plugin required')
         }
@@ -24,26 +24,31 @@ class PackPlugin implements Plugin<Project> {
 
             android.applicationVariants.all { variant ->
                 def variantName = variant.name.capitalize()
-                createTask(project, variantName)
+                createTask(project, variantName, packExtension.isResGuard)
             }
 
             android.buildTypes.all { buildType ->
                 def buildTypeName = buildType.name.capitalize()
-                createTask(project, buildTypeName)
+                createTask(project, buildTypeName, packExtension.isResGuard)
             }
 
             android.productFlavors.all { flavor ->
                 def flavorName = flavor.name.capitalize()
-                createTask(project, flavorName)
+                createTask(project, flavorName, packExtension.isResGuard)
             }
         }
     }
 
-    private static void createTask(Project project, variantName) {
+    private static void createTask(Project project, variantName, boolean isResGuard) {
+        def andResGuardName = "resguard${variantName}"
         def taskName = "pack${variantName}"
         if (project.tasks.findByPath(taskName) == null) {
             def task = project.task(taskName, type: PackBackTask)
-            task.dependsOn "assemble${variantName}"
+            if (isResGuard) {
+                task.dependsOn andResGuardName
+            } else {
+                task.dependsOn "assemble${variantName}"
+            }
         }
     }
 

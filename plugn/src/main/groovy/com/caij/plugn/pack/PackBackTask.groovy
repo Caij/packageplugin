@@ -85,25 +85,15 @@ class PackBackTask extends DefaultTask {
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
 
             //resource guard
-            String resMappingFileName = "resource_mapping_" + apkName + ".txt"
-            File resMappingFileBack = new File(backDir, resMappingFileName)
+
+            String resMappingFilePath = ""
             if (packExtension.isResGuard) {
-                File resDir = new File(outPutDir, "/resguard");
-//                java -jar andresguard.jar input.apk -config yourconfig.xml -out output_directory
-                execCommand("java", "-jar", packExtension.resGuardJarPath, resultFile.getAbsolutePath(), "-config", packExtension.resGuardConfigPath, "-7zip", packExtension.zipPath, "-zipalign", getZipAlignPath(), "-signatureType", "v2", "-out", resDir.getAbsolutePath())
-                File resguardApkFile = new File(resDir, apkName + "_7zip_aligned_signed.apk")
-
-                File resMappingFile = new File(resDir, resMappingFileName)
-
+                String resMappingFileName = "resource_mapping_" + apkName + ".txt"
+                File resMappingFileBack = new File(backDir, resMappingFileName)
+                File resMappingFile = new File(config.file.getParentFile(), resMappingFileName)
                 copyFileUsingStream(resMappingFile, resMappingFileBack)
-
-
-                resultFile = new File(backDir, resguardApkFile.getName())
-                copyFileUsingStream(resguardApkFile, resultFile)
-
-                resDir.deleteDir()
+                resMappingFilePath = resMappingFile.getAbsolutePath();
             }
-
 
             //walle
             if (packExtension.isWalle) {
@@ -115,7 +105,7 @@ class PackBackTask extends DefaultTask {
                 String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
                 File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
                 //只对source apk分析 因为后续的apk dex优化了 可能分析不准
-                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFileBack.getAbsolutePath(), resMappingFileBack.getAbsolutePath(), analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
+                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFile.getAbsolutePath(), resMappingFilePath, analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
 
                 println(resultJson)
 
