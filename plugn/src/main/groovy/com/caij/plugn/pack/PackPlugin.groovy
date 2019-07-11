@@ -52,10 +52,7 @@ class PackPlugin implements Plugin<Project> {
                 buildTaskName = "assemble${variantName}"
             }
 
-            task.dependsOn buildTaskName
-
-            def buildTask = project.tasks.findByName(buildTaskName)
-            buildTask.dependsOn "clean"
+            task.dependsOn "clean", buildTaskName
         }
     }
 
