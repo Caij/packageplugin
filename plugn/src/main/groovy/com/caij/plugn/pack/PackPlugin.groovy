@@ -46,9 +46,9 @@ class PackPlugin implements Plugin<Project> {
         if (task == null) {
             task = project.task(taskName, type: PackBackTask)
             if (isResGuard) {
-                task.dependsOn "clean", andResGuardName
+                task.dependsOn "clean"
             } else {
-                task.dependsOn "clean", "assemble${variantName}"
+                task.dependsOn "clean"
             }
         }
     }
