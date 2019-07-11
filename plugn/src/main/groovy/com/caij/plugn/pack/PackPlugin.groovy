@@ -1,9 +1,10 @@
 package com.caij.plugn.pack
 
-
+import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 
 /**
  * Created by zhangshaowen on 17/6/16.
@@ -40,16 +41,21 @@ class PackPlugin implements Plugin<Project> {
     }
 
     private static void createTask(Project project, variantName, boolean isResGuard) {
-        def andResGuardName = "resguard${variantName}"
+        def buildTaskName
         def taskName = "pack${variantName}"
         def task = project.tasks.findByPath(taskName)
         if (task == null) {
             task = project.task(taskName, type: PackBackTask)
             if (isResGuard) {
-                task.dependsOn "clean"
+                buildTaskName = "resguard${variantName}"
             } else {
-                task.dependsOn "clean"
+                buildTaskName = "assemble${variantName}"
             }
+
+            task.dependsOn buildTaskName
+
+            def buildTask = project.tasks.findByName(buildTaskName)
+            buildTask.dependsOn "clean"
         }
     }
 
