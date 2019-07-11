@@ -42,12 +42,13 @@ class PackPlugin implements Plugin<Project> {
     private static void createTask(Project project, variantName, boolean isResGuard) {
         def andResGuardName = "resguard${variantName}"
         def taskName = "pack${variantName}"
-        if (project.tasks.findByPath(taskName) == null) {
-            def task = project.task(taskName, type: PackBackTask)
+        def task = project.tasks.findByPath(taskName)
+        if (task == null) {
+            task = project.task(taskName, type: PackBackTask)
             if (isResGuard) {
-                task.dependsOn andResGuardName
+                task.dependsOn "clean", andResGuardName
             } else {
-                task.dependsOn "assemble${variantName}"
+                task.dependsOn "clean", "assemble${variantName}"
             }
         }
     }
