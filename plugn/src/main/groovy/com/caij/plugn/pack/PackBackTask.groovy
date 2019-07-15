@@ -95,10 +95,11 @@ class PackBackTask extends DefaultTask {
 
             //walle
             if (packExtension.isWalle) {
+                File channelFileDir = new File(outPutDir, "channel")
                 if (packExtension.walleV2) {
-                    execCommand("java", "-jar", packExtension.walleJarPath, "batch2", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath())
+                    execCommand("java", "-jar", packExtension.walleJarPath, "batch2", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), channelFileDir.getAbsolutePath())
                 } else {
-                    execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath())
+                    execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), channelFileDir.getAbsolutePath())
                 }
 
             }
