@@ -7,8 +7,8 @@ version='1.0.9'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    compile gradleApi()
-    compile localGroovy()
+    implementation gradleApi()
+    implementation localGroovy()
 }
 
 uploadArchives {

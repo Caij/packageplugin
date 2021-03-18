@@ -1,1 +1,1 @@
-# 一键打包插件 结合andresguard、walle、redex
+# 一键打包插件 结合andresguard、walle
