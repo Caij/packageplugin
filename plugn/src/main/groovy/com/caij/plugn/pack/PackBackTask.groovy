@@ -22,7 +22,7 @@ class PackBackTask extends DefaultTask {
                 String variantName = this.name["pack".length()..-1]
                 if (variantName.equalsIgnoreCase(variant.buildType.name as String) || isTargetFlavor(variantName,
                         variant.productFlavors, variant.buildType.name)) {
-                    buildConfigs << new BuildInfo(new File(variant.packageApplicationProvider.get().outputDirectory, output.outputFileName),
+                    buildConfigs << new BuildInfo(new File(variant.packageApplicationProvider.get().outputDirectory.getAsFile().get(), output.outputFileName),
                             variant.variantData.variantConfiguration.signingConfig,
                             variant.variantData.variantConfiguration.applicationId,
                             variant.buildType.name,
