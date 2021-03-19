@@ -1,12 +1,13 @@
 package com.caij.plugn.pack
 
+import com.google.gson.Gson
 import com.meituan.android.walle.ChannelWriter
+import com.meituan.android.walle.WalleConfig
 import org.apache.commons.io.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
-
 
 /**
  * The configuration properties.
@@ -132,19 +133,24 @@ class PackBackTask extends DefaultTask {
             //walle
             if (packExtension.isWalle) {
                 File channelFileDir = new File(outPutDir, "channel")
-                generateChannelApkByChannelFile(new File(packExtension.walleChannelPath), resultFile, channelFileDir)
+                if (packExtension.channelConfigFile != null && packExtension.channelConfigFile.length() > 0) {
+                    generateChannelApkByConfigFile(new File(packExtension.channelConfigFile), resultFile, channelFileDir, )
+                } else if (packExtension.channelFile != null && packExtension.channelFile.length() > 0){
+                    generateChannelApkByChannelFile(new File(packExtension.channelFile), resultFile, channelFileDir)
+                }
+
             }
         }
     }
 
     def generateChannelApkByChannelFile(File channelFile, File apkFile, File channelOutputFolder) {
-        getChannelListFromFile(channelFile).each { channel -> generateChannelApk(apkFile, channelOutputFolder, channel) }
+        getChannelListFromFile(channelFile).each { channel -> generateChannelApk(apkFile, channelOutputFolder, channel, null, null) }
     }
 
     private static final String DOT_APK = ".apk";
 
-    def generateChannelApk(File apkFile, File channelOutputFolder, channel) {
-        def channelName = channel
+    def generateChannelApk(File apkFile, File channelOutputFolder, channel, extraInfo, alias) {
+        def channelName = alias == null ? channel : alias
 
         String fileName = apkFile.getName();
         if (fileName.endsWith(DOT_APK)) {
@@ -155,7 +161,7 @@ class PackBackTask extends DefaultTask {
 
         File channelApkFile = new File(apkFileName, channelOutputFolder);
         FileUtils.copyFile(apkFile, channelApkFile);
-        ChannelWriter.put(channelApkFile, channel, null)
+        ChannelWriter.put(channelApkFile, channel, extraInfo)
     }
 
     static def getChannelListFromFile(File channelFile) {
@@ -172,127 +178,38 @@ class PackBackTask extends DefaultTask {
     }
 
 
-    def getZipAlignPath() {
-        return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/zipalign"
-    }
-
-    def getSignPath() {
-        return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/lib/apksigner.jar"
-    }
-
-    static Map<String, String> readMappingFile(File file) {
-        Map<String, String> map = new HashMap<>();
-        FileReader fr;
-        BufferedReader br;
-        try {
-            fr = new FileReader(file);
-            br = new BufferedReader(fr);
-            String line = "";
-
-            while ((line = br.readLine())!=null) {
-                if (line != null && line.endsWith(":")) {
-                    line = line.replace(":", "")
-                    String[] values = line.split(" -> ");
-                    map.put(values[0], values[1]);
+    def generateChannelApkByConfigFile(File configFile, File apkFile, File channelOutputFolder) {
+        WalleConfig config = new Gson().fromJson(new InputStreamReader(new FileInputStream(configFile), "UTF-8"), WalleConfig.class)
+        def defaultExtraInfo = config.getDefaultExtraInfo()
+        config.getChannelInfoList().each { channelInfo ->
+            def extraInfo = channelInfo.extraInfo
+            if (!channelInfo.excludeDefaultExtraInfo) {
+                switch (config.defaultExtraInfoStrategy) {
+                    case WalleConfig.STRATEGY_IF_NONE:
+                        if (extraInfo == null) {
+                            extraInfo = defaultExtraInfo
+                        }
+                        break;
+                    case WalleConfig.STRATEGY_ALWAYS:
+                        def temp = new HashMap<String, String>()
+                        if (defaultExtraInfo != null) {
+                            temp.putAll(defaultExtraInfo)
+                        }
+                        if (extraInfo != null) {
+                            temp.putAll(extraInfo)
+                        }
+                        extraInfo = temp
+                        break;
+                    default:
+                        break;
                 }
             }
-        } finally {
-            if (br != null) {
-                br.close();
-            }
 
-            if (fr != null) {
-                fr.close();
-            }
-        }
-
-        return map;
-    }
-
-    static void execCommand(String... command) {
-        Process proc;
-        try {
-            StringBuilder stringBuilder = new StringBuilder();
-            for(String s1 :command){
-                stringBuilder.append(s1).append(" ");
-            }
-            println(stringBuilder.toString())
-            proc = new ProcessBuilder(command).start();
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(proc.getInputStream()));
-
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(proc.getErrorStream()));
-
-            //这里必须加输出日志 否则apk canary不成功  咱不知道什么问题 考虑是gradle完成 进程被杀 所以导致不成功
-            println("Here is the standard output of the command:\n");
-            String s = null;
-            while ((s = stdInput.readLine()) != null) {
-                println(s);
-            }
-
-            println("Here is the standard error of the command (if any):\n");
-            while ((s = stdError.readLine()) != null) {
-                System.err.println(s);
-            }
-
-            proc.waitFor();
-            if (proc.exitValue() != 0) {
-                throw new RuntimeException("jar 执行失败");
-            }
-        } finally {
-            if (proc != null) {
-                proc.destroy();
-            }
-        }
-
-        println("jar 执行完成");
-    }
-
-    static void saveAsFileWriter(File file, String content) {
-        FileWriter fwriter = null;
-        try {
-            if (!file.getParentFile().exists()) {
-                file.getParentFile().mkdirs()
-            }
-            fwriter = new FileWriter(file);
-            fwriter.write(content);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally {
-            try {
-                fwriter.flush();
-                fwriter.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            generateChannelApk(apkFile, channelOutputFolder, channelInfo.channel, extraInfo)
         }
     }
 
-    static String getFileString(String path) {
-        try {
-            FileInputStream inStream= new FileInputStream(path);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] buffer=new byte[1024];
-            int length = -1;
-            while( (length = inStream.read(buffer)) != -1) {
-                bos.write(buffer,0,length);
-            }
-            bos.close();
-            inStream.close();
-            return bos.toString();
-        } catch (Exception e){
 
-        }
-        return null;
-    }
-
-
-    static useFolder(file) {
-        //remove .apk from filename
-        def fileName = file.name[0..-5]
-        return "${file.parent}/AndResGuard_${fileName}/"
-    }
 
     static void copyFileUsingStream(File source, File dest) throws IOException {
         FileInputStream is = null;

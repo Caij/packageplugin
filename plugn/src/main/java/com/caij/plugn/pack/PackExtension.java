@@ -7,5 +7,6 @@ public class PackExtension {
     public boolean isResGuard;
 
     public boolean isWalle;
-    public String walleChannelPath;
+    public String channelFile;
+    public String channelConfigFile;
 }
