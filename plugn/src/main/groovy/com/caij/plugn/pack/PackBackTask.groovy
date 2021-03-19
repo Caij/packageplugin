@@ -1,6 +1,8 @@
 package com.caij.plugn.pack
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -19,20 +21,49 @@ class PackBackTask extends DefaultTask {
         packExtension = project.pack
         android.applicationVariants.all { variant ->
             variant.outputs.each { output ->
-                String variantName = this.name["pack".length()..-1]
+                // remove "resguard"
+                String variantName = this.name["resguard".length()..-1]
                 if (variantName.equalsIgnoreCase(variant.buildType.name as String) || isTargetFlavor(variantName,
-                        variant.productFlavors, variant.buildType.name)) {
-                    buildConfigs << new BuildInfo(new File(variant.packageApplicationProvider.get().outputDirectory.getAsFile().get(), output.outputFileName),
-                            variant.variantData.variantConfiguration.signingConfig,
-                            variant.variantData.variantConfiguration.applicationId,
+                        variant.productFlavors, variant.buildType.name) ||
+                        variantName.equalsIgnoreCase(AndResGuardPlugin.USE_APK_TASK_NAME)) {
+
+                    def outputFile = null
+                    try {
+                        if (variant.metaClass.respondsTo(variant, "getPackageApplicationProvider")) {
+                            outputFile = new File(variant.packageApplicationProvider.get().outputDirectory, output.outputFileName)
+                        }
+                    } catch (Exception ignore) {
+                        // no-op
+                    } finally {
+                        outputFile = outputFile ?: output.outputFile
+                    }
+
+                    def variantInfo
+                    if (variant.variantData.hasProperty("variantConfiguration")) {
+                        variantInfo = variant.variantData.variantConfiguration
+                    } else {
+                        variantInfo = variant.variantData.variantDslInfo
+                    }
+
+                    def applicationId = variantInfo.applicationId instanceof Property
+                            ? variantInfo.applicationId.get()
+                            : variantInfo.applicationId
+
+                    buildConfigs << new BuildInfo(
+                            outputFile,
+                            variantInfo.signingConfig,
+                            applicationId,
                             variant.buildType.name,
                             variant.productFlavors,
                             variantName,
                             variant.mergedFlavor.minSdkVersion.apiLevel,
-                            variant.versionName,
-                            variant.versionCode)
+                            variant.mergedFlavor.targetSdkVersion.apiLevel,
+                    )
                 }
             }
+        }
+        if (!project.plugins.hasPlugin('com.android.application')) {
+            throw new GradleException('generateARGApk: Android Application plugin required')
         }
     }
 
