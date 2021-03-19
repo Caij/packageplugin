@@ -1,6 +1,7 @@
 package com.caij.plugn.pack
 
 import com.google.gson.Gson
+import com.meituan.android.walle.ChannelMaker
 import com.meituan.android.walle.ChannelWriter
 import com.meituan.android.walle.WalleConfig
 import org.apache.commons.io.FileUtils
@@ -134,7 +135,7 @@ class PackBackTask extends DefaultTask {
             if (packExtension.isWalle) {
                 File channelFileDir = new File(outPutDir, "channel")
                 if (packExtension.channelConfigFile != null && packExtension.channelConfigFile.length() > 0) {
-                    generateChannelApkByConfigFile(new File(packExtension.channelConfigFile), resultFile, channelFileDir, )
+                    generateChannelApkByConfigFile(new File(packExtension.channelConfigFile), resultFile, channelFileDir)
                 } else if (packExtension.channelFile != null && packExtension.channelFile.length() > 0){
                     generateChannelApkByChannelFile(new File(packExtension.channelFile), resultFile, channelFileDir)
                 }
@@ -174,6 +175,7 @@ class PackBackTask extends DefaultTask {
                     channelList.add(channel)
             }
         }
+
         return channelList
     }
 
@@ -205,7 +207,7 @@ class PackBackTask extends DefaultTask {
                 }
             }
 
-            generateChannelApk(apkFile, channelOutputFolder, channelInfo.channel, extraInfo)
+            generateChannelApk(apkFile, channelOutputFolder, channelInfo.channel, extraInfo, channelInfo.alias)
         }
     }
 
