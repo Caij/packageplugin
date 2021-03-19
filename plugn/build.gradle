@@ -9,6 +9,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation gradleApi()
     implementation localGroovy()
+    implementation 'com.meituan.android.walle:plugin:1.1.7'
 }
 
 uploadArchives {

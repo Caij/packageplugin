@@ -1,9 +1,12 @@
 package com.caij.plugn.pack
 
+import com.meituan.android.walle.ChannelWriter
+import org.apache.commons.io.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.TaskAction
+
 
 /**
  * The configuration properties.
@@ -120,41 +123,54 @@ class PackBackTask extends DefaultTask {
             apkName = apkName.substring(0, apkName.indexOf(".apk"));
 
             //resource guard
-            String resMappingFilePath = ""
             if (packExtension.isResGuard) {
                 String resMappingFileName = "resource_mapping_" + apkName + ".txt"
                 File resMappingFile = new File(config.file.getParentFile(), "/AndResGuard_" + apkName + "/" + resMappingFileName)
                 println("res mapping file " + resMappingFile.exists())
-                resMappingFilePath = resMappingFile.getAbsolutePath();
             }
 
             //walle
             if (packExtension.isWalle) {
                 File channelFileDir = new File(outPutDir, "channel")
-                if (packExtension.walleV2) {
-                    execCommand("java", "-jar", packExtension.walleJarPath, "batch2", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), channelFileDir.getAbsolutePath())
-                } else {
-                    execCommand("java", "-jar", packExtension.walleJarPath, "batch", "-f", packExtension.walleChannelPath, resultFile.getAbsolutePath(), channelFileDir.getAbsolutePath())
-                }
-
+                generateChannelApkByChannelFile(new File(packExtension.walleChannelPath), resultFile, channelFileDir)
             }
-//
-//            if (packExtension.isApkCanary) {
-//                File analyzeFile = new File(backDir, "apk-checker-result");
-//                String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
-//                File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
-//                //只对source apk分析 因为后续的apk dex优化了 可能分析不准
-//                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFile.getAbsolutePath(), resMappingFilePath, analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
-//
-//                println(resultJson)
-//
-//                File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
-//                saveAsFileWriter(resultJsonFile, resultJson)
-//
-//                execCommand("java", "-jar", packExtension.apkCanaryJarPath, "--config", "CONFIG-FILE_PATH", resultJsonFile.getAbsolutePath())
-//            }
         }
     }
+
+    def generateChannelApkByChannelFile(File channelFile, File apkFile, File channelOutputFolder) {
+        getChannelListFromFile(channelFile).each { channel -> generateChannelApk(apkFile, channelOutputFolder, channel) }
+    }
+
+    private static final String DOT_APK = ".apk";
+
+    def generateChannelApk(File apkFile, File channelOutputFolder, channel) {
+        def channelName = channel
+
+        String fileName = apkFile.getName();
+        if (fileName.endsWith(DOT_APK)) {
+            fileName = fileName.substring(0, fileName.lastIndexOf(DOT_APK));
+        }
+
+        String apkFileName = "${fileName}-${channelName}${DOT_APK}";
+
+        File channelApkFile = new File(apkFileName, channelOutputFolder);
+        FileUtils.copyFile(apkFile, channelApkFile);
+        ChannelWriter.put(channelApkFile, channel, null)
+    }
+
+    static def getChannelListFromFile(File channelFile) {
+        def channelList = []
+        channelFile.eachLine { line ->
+            def lineTrim = line.trim()
+            if (lineTrim.length() != 0 && !lineTrim.startsWith("#")) {
+                def channel = line.split("#").first().trim()
+                if (channel.length() != 0)
+                    channelList.add(channel)
+            }
+        }
+        return channelList
+    }
+
 
     def getZipAlignPath() {
         return "${android.getSdkDirectory().getAbsolutePath()}/build-tools/${android.buildToolsVersion}/zipalign"
