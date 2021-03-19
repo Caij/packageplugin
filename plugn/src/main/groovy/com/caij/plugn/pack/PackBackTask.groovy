@@ -22,7 +22,7 @@ class PackBackTask extends DefaultTask {
         android.applicationVariants.all { variant ->
             variant.outputs.each { output ->
                 // remove "resguard"
-                String variantName = this.name["resguard".length()..-1]
+                String variantName = this.name["pack".length()..-1]
                 if (variantName.equalsIgnoreCase(variant.buildType.name as String) || isTargetFlavor(variantName,
                         variant.productFlavors, variant.buildType.name)) {
 
