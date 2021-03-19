@@ -1,18 +1,21 @@
 package com.caij.plugn.pack;
 
-public class BuildInfo {
 
+class BuildInfo {
     def file
     def signConfig
     def packageName
     def buildType
     def flavors
     def taskName
-    def minSDKVersion
+    int minSDKVersion
+    int targetSDKVersion
     def versionName
     def versionCode
 
-    BuildInfo(file, sign, packageName, buildType, flavors, taskName, minSDKVersion, versionName, versionCode) {
+
+    BuildInfo(file, sign, packageName, buildType, flavors, taskName, minSDKVersion, targetSDKVersion,
+              def versionName, def versionCode) {
         this.file = file
         this.signConfig = sign
         this.packageName = packageName
@@ -20,6 +23,7 @@ public class BuildInfo {
         this.flavors = flavors
         this.taskName = taskName
         this.minSDKVersion = minSDKVersion
+        this.targetSDKVersion = targetSDKVersion
         this.versionName = versionName
         this.versionCode = versionCode
     }
@@ -27,13 +31,12 @@ public class BuildInfo {
     @Override
     String toString() {
         """| file = ${file}
-                | packageName = ${packageName}
+       | packageName = ${packageName}
        | buildType = ${buildType}
        | flavors = ${flavors}
        | taskname = ${taskName}
        | minSDKVersion = ${minSDKVersion}
-        | versionName = ${versionName}
-        | versionCode = ${versionCode}
-        """.stripMargin()
+       | targetSDKVersion = ${targetSDKVersion}
+    """.stripMargin()
     }
 }

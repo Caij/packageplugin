@@ -57,6 +57,8 @@ class PackBackTask extends DefaultTask {
                             variantName,
                             variant.mergedFlavor.minSdkVersion.apiLevel,
                             variant.mergedFlavor.targetSdkVersion.apiLevel,
+                            variant.versionName,
+                            variant.versionCode
                     )
                 }
             }
