@@ -12,10 +12,11 @@ class BuildInfo {
     int targetSDKVersion
     def versionName
     def versionCode
+    def mappingFile
 
 
     BuildInfo(file, sign, packageName, buildType, flavors, taskName, minSDKVersion, targetSDKVersion,
-              def versionName, def versionCode) {
+              def versionName, def versionCode, def mappingFile) {
         this.file = file
         this.signConfig = sign
         this.packageName = packageName
@@ -26,6 +27,7 @@ class BuildInfo {
         this.targetSDKVersion = targetSDKVersion
         this.versionName = versionName
         this.versionCode = versionCode
+        this.mappingFile = mappingFile;
     }
 
     @Override

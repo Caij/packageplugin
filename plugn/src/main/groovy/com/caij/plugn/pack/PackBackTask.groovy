@@ -44,6 +44,8 @@ class PackBackTask extends DefaultTask {
                         variantInfo = variant.variantData.variantDslInfo
                     }
 
+                    print("mapping " + variant.mappingFile)
+
                     def applicationId = variantInfo.applicationId instanceof Property
                             ? variantInfo.applicationId.get()
                             : variantInfo.applicationId
@@ -58,7 +60,8 @@ class PackBackTask extends DefaultTask {
                             variant.mergedFlavor.minSdkVersion.apiLevel,
                             variant.mergedFlavor.targetSdkVersion.apiLevel,
                             variant.versionName,
-                            variant.versionCode
+                            variant.versionCode,
+                            variant.mappingFile
                     )
                 }
             }
@@ -105,10 +108,10 @@ class PackBackTask extends DefaultTask {
             File sourceApkFileBack = new File(backDir, apkBasename + ".apk")
             copyFileUsingStream(config.file, sourceApkFileBack)
 
-            File mappingFile = new File("${project.buildDir}/outputs/mapping/" + flavorName + "/" + buildType + "/mapping.txt")
+
             File mappingFileBack = new File(backDir, "mapping.txt")
             if (mappingFile.exists()) {
-                copyFileUsingStream(mappingFile, mappingFileBack)
+                copyFileUsingStream(config.mappingFile, mappingFileBack)
             }
 
             File resultFile = sourceApkFileBack;
