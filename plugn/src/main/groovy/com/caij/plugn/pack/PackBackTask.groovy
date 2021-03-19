@@ -44,7 +44,7 @@ class PackBackTask extends DefaultTask {
                         variantInfo = variant.variantData.variantDslInfo
                     }
 
-                    print("mapping " + variant.mappingFile)
+
 
                     def applicationId = variantInfo.applicationId instanceof Property
                             ? variantInfo.applicationId.get()
@@ -108,10 +108,10 @@ class PackBackTask extends DefaultTask {
             File sourceApkFileBack = new File(backDir, apkBasename + ".apk")
             copyFileUsingStream(config.file, sourceApkFileBack)
 
-
+            File mappingFile = config.mappingFile
             File mappingFileBack = new File(backDir, "mapping.txt")
             if (mappingFile.exists()) {
-                copyFileUsingStream(config.mappingFile, mappingFileBack)
+                copyFileUsingStream(mappingFile, mappingFileBack)
             }
 
             File resultFile = sourceApkFileBack;
@@ -138,21 +138,21 @@ class PackBackTask extends DefaultTask {
                 }
 
             }
-
-            if (packExtension.isApkCanary) {
-                File analyzeFile = new File(backDir, "apk-checker-result");
-                String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
-                File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
-                //只对source apk分析 因为后续的apk dex优化了 可能分析不准
-                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFile.getAbsolutePath(), resMappingFilePath, analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
-
-                println(resultJson)
-
-                File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
-                saveAsFileWriter(resultJsonFile, resultJson)
-
-                execCommand("java", "-jar", packExtension.apkCanaryJarPath, "--config", "CONFIG-FILE_PATH", resultJsonFile.getAbsolutePath())
-            }
+//
+//            if (packExtension.isApkCanary) {
+//                File analyzeFile = new File(backDir, "apk-checker-result");
+//                String apkCanaryJson = getFileString(packExtension.apkCanaryJsonPath)
+//                File resRFile = new File(project.buildDir, "/intermediates/symbols/" + flavorName + "/" + buildType + "/R.txt")
+//                //只对source apk分析 因为后续的apk dex优化了 可能分析不准
+//                String resultJson = String.format(apkCanaryJson, resultFile.getAbsolutePath(), mappingFile.getAbsolutePath(), resMappingFilePath, analyzeFile.getAbsolutePath(), resRFile.getAbsolutePath())
+//
+//                println(resultJson)
+//
+//                File resultJsonFile = new File("${project.buildDir}/apk-canary", "apk_config.json")
+//                saveAsFileWriter(resultJsonFile, resultJson)
+//
+//                execCommand("java", "-jar", packExtension.apkCanaryJarPath, "--config", "CONFIG-FILE_PATH", resultJsonFile.getAbsolutePath())
+//            }
         }
     }
 
