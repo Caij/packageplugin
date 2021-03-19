@@ -24,8 +24,7 @@ class PackBackTask extends DefaultTask {
                 // remove "resguard"
                 String variantName = this.name["resguard".length()..-1]
                 if (variantName.equalsIgnoreCase(variant.buildType.name as String) || isTargetFlavor(variantName,
-                        variant.productFlavors, variant.buildType.name) ||
-                        variantName.equalsIgnoreCase(AndResGuardPlugin.USE_APK_TASK_NAME)) {
+                        variant.productFlavors, variant.buildType.name)) {
 
                     def outputFile = null
                     try {
