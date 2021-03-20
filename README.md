@@ -3,6 +3,7 @@
 ## 接入步骤
 ### 1 根目录gradle插件中添加
 ```
+maven { url "https://jitpack.io"}
 classpath 'com.github.Caij:packageplugin:50f72dfc73'
 ```
 
