@@ -10,6 +10,7 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
     implementation 'com.meituan.android.walle:plugin:1.1.7'
+    implementation 'com.tencent.mm:AndResGuard-gradle-plugin:1.2.21'
 }
 
 uploadArchives {

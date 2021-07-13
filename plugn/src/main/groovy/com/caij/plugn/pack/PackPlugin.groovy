@@ -1,5 +1,6 @@
 package com.caij.plugn.pack
 
+import com.tencent.gradle.AndResGuardTask
 import org.gradle.api.Action
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -54,8 +55,21 @@ class PackPlugin implements Plugin<Project> {
 
             task.dependsOn "clean", buildTaskName
         }
+
+        createTaskSingle(project, variantName)
     }
 
-
+    private static void createTaskSingle(Project project, String variantName) {
+        if (variantName.contains("neice") || variantName.contains("Neice")) {
+            def resguardName = "singleResguard${variantName}"
+            def task = project.tasks.findByPath(resguardName)
+            if (task == null) {
+                def assemble = "assemble${variantName}"
+                def buildTask = project.tasks.findByPath(assemble)
+                def resguardTask = project.task(resguardName, type: AndResGuardTask)
+                buildTask.finalizedBy(resguardTask)
+            }
+        }
+    }
 
 }
