@@ -60,7 +60,7 @@ class PackPlugin implements Plugin<Project> {
     }
 
     private static void createTaskSingle(Project project, String variantName) {
-        if (variantName.contains("neice") || variantName.contains("Neice")) {
+        if (variantName.contains("appcenter") || variantName.contains("Appcenter")) {
             def resguardName = "sesguard${variantName}"
             def task = project.tasks.findByPath(resguardName)
             if (task == null) {
