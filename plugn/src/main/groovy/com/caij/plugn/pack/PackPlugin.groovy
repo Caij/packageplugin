@@ -61,7 +61,7 @@ class PackPlugin implements Plugin<Project> {
 
     private static void createTaskSingle(Project project, String variantName) {
         if (variantName.contains("neice") || variantName.contains("Neice")) {
-            def resguardName = "singleResguard${variantName}"
+            def resguardName = "singleresguard${variantName}"
             def task = project.tasks.findByPath(resguardName)
             if (task == null) {
                 def assemble = "assemble${variantName}"
