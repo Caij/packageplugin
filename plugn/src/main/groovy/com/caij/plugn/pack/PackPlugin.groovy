@@ -55,21 +55,6 @@ class PackPlugin implements Plugin<Project> {
 
             task.dependsOn "clean", buildTaskName
         }
-
-        createTaskSingle(project, variantName)
-    }
-
-    private static void createTaskSingle(Project project, String variantName) {
-        if (variantName.contains("appcenter") || variantName.contains("Appcenter")) {
-            def resguardName = "sesguard${variantName}"
-            def task = project.tasks.findByPath(resguardName)
-            if (task == null) {
-                def assemble = "assemble${variantName}"
-                def buildTask = project.tasks.findByPath(assemble)
-                def resguardTask = project.task(resguardName, type: AndResGuardTask)
-                buildTask.finalizedBy(resguardTask)
-            }
-        }
     }
 
 }
