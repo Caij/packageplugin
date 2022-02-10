@@ -119,13 +119,7 @@ class PackBackTask extends DefaultTask {
                 copyFileUsingStream(mappingFile, mappingFileBack)
             }
 
-            File resMappingFile = new File(config.file.getParentFile(), "AndResGuard_" + apkBasename + "/" + "resource_mapping_" + apkBasename + ".txt")
-            File resMappingFileBack = new File(backDir, "resource_mapping.txt")
-            if (resMappingFile.exists()) {
-                copyFileUsingStream(resMappingFile, resMappingFileBack)
-            } else {
-                println("resMappingFile not exist " + resMappingFile.getAbsolutePath())
-            }
+
 
             File rFile = new File(project.buildDir, "intermediates/runtime_symbol_list/" + config.taskName + "/R.txt")
             File rFileBack = new File(backDir, "R.txt")
@@ -135,14 +129,15 @@ class PackBackTask extends DefaultTask {
 
             File resultFile = sourceApkFileBack;
 
-            String apkName = resultFile.getName();
-            apkName = apkName.substring(0, apkName.indexOf(".apk"));
-
             //resource guard
             if (packExtension.isResGuard) {
-                String resMappingFileName = "resource_mapping_" + apkName + ".txt"
-                File resMappingFile = new File(config.file.getParentFile(), "/AndResGuard_" + apkName + "/" + resMappingFileName)
-                println("res mapping file " + resMappingFile.exists())
+                File resMappingFile = new File(config.file.getParentFile(), "AndResGuard_" + apkBasename + "/" + "resource_mapping_" + apkBasename + ".txt")
+                File resMappingFileBack = new File(backDir, "resource_mapping.txt")
+                if (resMappingFile.exists()) {
+                    copyFileUsingStream(resMappingFile, resMappingFileBack)
+                } else {
+                    println("resMappingFile not exist " + resMappingFile.getAbsolutePath())
+                }
             }
 
             //walle
