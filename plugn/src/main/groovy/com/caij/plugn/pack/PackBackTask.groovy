@@ -119,6 +119,13 @@ class PackBackTask extends DefaultTask {
                 copyFileUsingStream(mappingFile, mappingFileBack)
             }
 
+
+            File rFile = new File(project.buildDir, "intermediates/runtime_symbol_list/" + config.taskName + "/R.txt")
+            File rFileBack = new File(backDir, "R.txt")
+            if (rFile.exists()) {
+                copyFileUsingStream(rFile, rFileBack)
+            }
+
             File resultFile = sourceApkFileBack;
 
             String apkName = resultFile.getName();
